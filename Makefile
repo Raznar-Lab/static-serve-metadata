@@ -36,6 +36,15 @@ build-prod: ## Builds the app for production purpose.
 	go mod tidy -v
 	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -gcflags "all=-trimpath=$(pwd)" -o ./build/$(APP_NAME)_linux_amd64 -v $(SOURCE_PATH)
 
+.PHONY: build-all-prod
+build-all-prod: ## Builds production-ready binaries for all platforms.
+	@echo "Building production binaries for all platforms..."
+	GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" -gcflags "all=-trimpath=$(pwd)" -o ./build/$(APP_NAME)_linux_amd64 $(SOURCE_PATH)
+	GOOS=linux GOARCH=arm64 go build -ldflags="-s -w" -gcflags "all=-trimpath=$(pwd)" -o ./build/$(APP_NAME)_linux_arm64 $(SOURCE_PATH)
+	GOOS=windows GOARCH=amd64 go build -ldflags="-s -w" -gcflags "all=-trimpath=$(pwd)" -o ./build/$(APP_NAME)_windows_amd64.exe $(SOURCE_PATH)
+	GOOS=darwin GOARCH=amd64 go build -ldflags="-s -w" -gcflags "all=-trimpath=$(pwd)" -o ./build/$(APP_NAME)_darwin_amd64 $(SOURCE_PATH)
+	GOOS=darwin GOARCH=arm64 go build -ldflags="-s -w" -gcflags "all=-trimpath=$(pwd)" -o ./build/$(APP_NAME)_darwin_arm64 $(SOURCE_PATH)
+
 .PHONY: start
 start: ## Starts the app from 'build' directory.
 	ENVIRONMENT=production ./build/$(APP_NAME)$(BIN_EXT) start
