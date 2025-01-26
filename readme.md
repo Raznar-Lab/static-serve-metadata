@@ -9,7 +9,7 @@ But here’s the game-changer: **a custom "Serve" application** that handles SEO
 ## 🛠️ **How It Works**
 
 1. **Centralized SEO Configuration**  
-   Instead of embedding meta tags and SEO-related data directly in your React or SPA code, you define them in a single `seo-config.json` (or similar) file. This file is a structured, human-readable format that the Serve application uses.
+   Instead of embedding meta tags and SEO-related data directly in your React or SPA code, you define them in a single or multiple `seo-config.json` (or similar) file. This file is a structured, human-readable format that the Serve application uses.
 
 2. **Dynamic Tag Injection**  
    The Serve application dynamically reads the configuration and injects meta tags, Open Graph data, Twitter cards, and other SEO elements **on the server side**. This ensures proper indexing by search engines.
@@ -44,25 +44,82 @@ But here’s the game-changer: **a custom "Serve" application** that handles SEO
 2. **Create Your Configuration File**  
    Define your SEO settings in a `seo-config.json` file:  
    ```json
-   {
-     "global": {
-       "title": "My Awesome App",
-       "description": "Welcome to My Awesome App, your go-to platform for amazing solutions.",
-       "keywords": "awesome, app, solutions, platform"
-     },
-     "routes": {
-       "/": {
-         "title": "Home | My Awesome App",
-         "description": "Explore the best features of My Awesome App.",
-         "og:image": "/assets/homepage.png"
-       },
-       "/about": {
-         "title": "About Us | My Awesome App",
-         "description": "Learn more about the team and mission behind My Awesome App.",
-         "og:image": "/assets/about.png"
-       }
-     }
-   }
+    [
+        {
+            "url": "/",
+            "default": true,
+            "metadata": [
+                {
+                    "tag": "title",
+                    "content": "VPS Hosting | Raznar Hosting"
+                },
+                {
+                    "tag": "script",
+                    "content": "/assets/index-BXZXldJ3.js"
+                },
+                {
+                    "tag": "stylesheet",
+                    "content": "/assets/index-BAQv6Ppt.css"
+                },
+                {
+                    "tag": "testatatata",
+                    "content": "aye"
+                },
+                {
+                    "tag": "description",
+                    "content": "Our VPS hosting solutions offer unparalleled control, flexibility, and reliability for your online projects."
+                },
+                {
+                    "tag": "robots",
+                    "content": "index, follow"
+                },
+                {
+                    "tag": "googlebot",
+                    "content": "index, follow"
+                },
+                {
+                    "tag": "og:title",
+                    "content": "VPS Hosting"
+                },
+                {
+                    "tag": "og:description",
+                    "content": "Our VPS hosting solutions offer unparalleled control, flexibility, and reliability for your online projects."
+                },
+                {
+                    "tag": "og:image",
+                    "content": "https://raznar.id/icons/og.webp"
+                },
+                {
+                    "tag": "og:url",
+                    "content": "https://raznar.id"
+                },
+                {
+                    "tag": "og:site_name",
+                    "content": "Raznar Hosting"
+                },
+                {
+                    "tag": "twitter:creator",
+                    "content": "Raznar Hosting"
+                },
+                {
+                    "tag": "twitter:card",
+                    "content": "article"
+                },
+                {
+                    "tag": "twitter:title",
+                    "content": "VPS Hosting"
+                },
+                {
+                    "tag": "twitter:description",
+                    "content": "Our VPS hosting solutions offer unparalleled control, flexibility, and reliability for your online projects."
+                },
+                {
+                    "tag": "keywords",
+                    "content": "Premium game hosting, minecraft hosting, affordable minecraft hosting, fivem hosting, fivem game hosting, virtual private server, virtual dedicated server, web hosting, minecraft server, hosting service with full support and premium quality, Game hosting premium Indonesia, Game hosting Minecraft Indonesia, VPS game hosting Indonesia terjangkau, Game hosting untuk komunitas Indonesia, Game hosting terbaik di Indonesia, Server game hosting Indonesia terpercaya, Game hosting Minecraft modded terjangkau, Penyedia game hosting Indonesia, Game hosting untuk komunitas besar, Layanan game hosting Indonesia terbaik, Server game dengan performa tinggi, Game hosting dengan SSD NVMe Indonesia, Hosting server game multiplayer Indonesia, Game hosting komunitas Minecraft Indonesia, Server Minecraft modifikasi Indonesia, Game hosting dengan latensi rendah, Game hosting dengan perlindungan DDoS, Penyedia game hosting terpercaya Indonesia, Game hosting survival Minecraft Indonesia, Game hosting server virtual Indonesia, Game hosting dengan dukungan penuh Indonesia"
+                }
+            ]
+        }
+    ]
    ```
 
 3. **Start the Serve Application**  
