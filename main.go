@@ -1,9 +1,9 @@
 package main
 
 import (
-	"raznar.id/serve-static-seo/config"
-	"raznar.id/serve-static-seo/flags"
-	"raznar.id/serve-static-seo/logger"
+	"raznar.id/static-serve-metadata/config"
+	"raznar.id/static-serve-metadata/flags"
+	"raznar.id/static-serve-metadata/logger"
 )
 
 

@@ -13,8 +13,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	logger_middleware "github.com/gofiber/fiber/v2/middleware/logger"
-	"raznar.id/serve-static-seo/config"
-	"raznar.id/serve-static-seo/logger"
+	"raznar.id/static-serve-metadata/config"
+	"raznar.id/static-serve-metadata/logger"
 )
 
 type Metadata struct {

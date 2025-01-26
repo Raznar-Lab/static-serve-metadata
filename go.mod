@@ -1,4 +1,4 @@
-module raznar.id/serve-static-seo
+module raznar.id/static-serve-metadata
 
 go 1.23.2
 
