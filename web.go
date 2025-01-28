@@ -25,23 +25,27 @@ type Metadata struct {
 type SEOData struct {
 	URL      string     `json:"url"`
 	Default  bool       `json:"default"`
+	Template bool       `json:"template"`
 	Metadata []Metadata `json:"metadata"`
 }
 
 type GroupSEO struct {
 
 	// key: lang code
-	SeoContents        []SEOData
-	SeoDefaultContents SEOData
+	SeoContents         []SEOData
+	SeoDefaultContents  SEOData
+	SeoTemplateContents SEOData
 }
 
 func (g GroupSEO) GetDataByURL(url string) SEOData {
 	for _, ctn := range g.SeoContents {
-		if strings.Contains(url, ctn.URL) {
+		logger.System.DebugInfo(ctn.URL, url)
+		if ctn.URL == url {
 			return ctn
 		}
 	}
 
+	logger.System.DebugInfo("not found, giving the default")
 	return g.SeoDefaultContents
 }
 
@@ -55,7 +59,8 @@ func (s SEOData) CollectMetadataString() string {
 		metadataList = append(metadataList, mtd.ConvertToHTML())
 	}
 
-	return strings.Join(metadataList, "\n")
+	// indent 4 spaces.
+	return strings.Join(metadataList, "\n    ")
 }
 
 func (s Metadata) ConvertToHTML() string {
@@ -76,8 +81,9 @@ func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []b
 
 		groupSEO := mapSEO[langCode]
 		logger.System.DebugInfo("lang ", langCode)
+		logger.System.DebugInfo("path: ", wPath)
 		seoData := groupSEO.GetDataByURL(wPath)
-		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->", seoData.CollectMetadataString(), 1)
+		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->",  groupSEO.SeoTemplateContents.CollectMetadataString() + "\n" + seoData.CollectMetadataString(), 1)
 
 		c.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ac.WebConfig.MaxAge))
 		c.Set("Content-Type", "text/html")
@@ -132,6 +138,17 @@ func loadSEO(ac *config.AppConfig) (map[string]GroupSEO, error) {
 		groupSeo[lang] = content
 	}
 
+	for lang, content := range groupSeo {
+		for _, seo := range content.SeoContents {
+			if seo.Template {
+				content.SeoTemplateContents = seo
+				break
+			}
+		}
+
+		groupSeo[lang] = content
+	}
+
 	return groupSeo, nil
 }
 
@@ -176,7 +193,6 @@ func loadSeoContents(directory string) ([]SEOData, error) {
 
 	return seoContents, nil
 }
-
 
 func RunWeb(ac *config.AppConfig) (err error) {
 	webConf := ac.WebConfig
