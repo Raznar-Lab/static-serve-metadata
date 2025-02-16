@@ -1,0 +1,23 @@
+[
+    {
+        "default": true,
+        "metadata": [
+            {
+                "tag": "og:title",
+                "content": "Your solution for business and community servers | Raznar Hosting"
+            },
+            {
+                "tag": "og:description",
+                "content": "Raznar is a hosting company that provides various hosting services such as Game hosting, Database Hosting, App hosting to meet your hosting needs."
+            },
+            {
+                "tag": "twitter:title",
+                "content": "Your solution for business and community servers | Raznar Hosting"
+            },
+            {
+                "tag": "twitter:description",
+                "content": "Raznar is a hosting company that provides various hosting services such as Game hosting, Database Hosting, App hosting to meet your hosting needs."
+            }
+        ]
+    }
+]

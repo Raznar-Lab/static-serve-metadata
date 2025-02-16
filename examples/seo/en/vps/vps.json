@@ -1,0 +1,24 @@
+[
+    {
+        "url": "/virtual-private-server",
+        "default": false,
+        "metadata": [
+            {
+                "tag": "og:title",
+                "content": "Virtual Private Server | Raznar Hosting"
+            },
+            {
+                "tag": "og:description",
+                "content": "Enhance your server experience with our reliable and scalable VPS hosting solutions, tailored for optimal performance."
+            },
+            {
+                "tag": "twitter:title",
+                "content": "Virtual Private Server | Raznar Hosting"
+            },
+            {
+                "tag": "twitter:description",
+                "content": "Enhance your server experience with our reliable and scalable VPS hosting solutions, tailored for optimal performance."
+            }
+        ]
+    }
+]
