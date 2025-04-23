@@ -59,6 +59,8 @@ jobs:
               --repo "$GITHUB_REPOSITORY" \
               --clobber
           done
+
+          gh release edit "${REF:10}" --draft=false --repo "$GITHUB_REPOSITORY"
         env:
           REF: ${{ github.ref }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
