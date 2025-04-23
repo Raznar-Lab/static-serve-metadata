@@ -33,6 +33,10 @@ jobs:
         run: |
           tar -czf serve-static-metadata.tar.gz * .github .gitignore .dockerignore
 
+      - name: Create release builds
+        run: |
+          make build-all-prod
+
       - name: Create release
         id: create_release
         uses: softprops/action-gh-release@v1
@@ -42,13 +46,21 @@ jobs:
           draft: true
           prerelease: ${{ contains(github.ref, 'rc') || contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
 
-      - name: Upload release archive
-        id: upload-release-archive
-        uses: actions/upload-release-asset@v1
+      - name: Set up GitHub CLI
+        uses: cli/cli-action@v2
+
+      - name: Upload release files
+        run: |
+          gh release upload "${{ steps.create_release.outputs.id }}" \
+            serve-static-metadata.tar.gz \
+            --repo "$GITHUB_REPOSITORY" \
+            --clobber
+
+          for file in build/*; do
+            echo "Uploading $file"
+            gh release upload "${{ steps.create_release.outputs.id }}" "$file" \
+              --repo "$GITHUB_REPOSITORY" \
+              --clobber
+          done
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: serve-static-metadata.tar.gz
-          asset_name: serve-static-metadata.tar.gz
-          asset_content_type: application/gzip
