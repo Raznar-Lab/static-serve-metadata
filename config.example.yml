@@ -1,5 +1,5 @@
 web:
-  // 1 Hour
+  # 1 Hour
   max_age: 3600
   index_file: "index.html"
   data_path: "./web"
