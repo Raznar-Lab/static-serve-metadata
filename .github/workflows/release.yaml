@@ -48,14 +48,14 @@ jobs:
 
       - name: Upload release files
         run: |
-          gh release upload "${{ steps.create_release.outputs.id }}" \
+          gh release upload "${{ steps.create_release.outputs.upload_url }}" \
             serve-static-metadata.tar.gz \
             --repo "$GITHUB_REPOSITORY" \
             --clobber
 
           for file in build/*; do
             echo "Uploading $file"
-            gh release upload "${{ steps.create_release.outputs.id }}" "$file" \
+            gh release upload "${{ steps.create_release.outputs.upload_url }}" "$file" \
               --repo "$GITHUB_REPOSITORY" \
               --clobber
           done
