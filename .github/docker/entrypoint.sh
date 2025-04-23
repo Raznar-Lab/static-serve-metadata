@@ -9,4 +9,4 @@ else
 fi
 
 cp /app/var/config.yml /app/config.yml
-/usr/local/bin/app-binary start
+/usr/local/bin/app-binary
