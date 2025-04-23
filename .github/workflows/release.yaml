@@ -46,7 +46,7 @@ jobs:
           draft: true
           prerelease: ${{ contains(github.ref, 'rc') || contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
 
-      - name: Set up GitHub CLI
+      - name: Upload CLI 
         uses: cli/cli-action@v2
 
       - name: Upload release files
