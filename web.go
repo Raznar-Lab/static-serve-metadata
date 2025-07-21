@@ -14,7 +14,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	logger_middleware "github.com/gofiber/fiber/v2/middleware/logger"
 	"raznar.id/static-serve-metadata/config"
-	"raznar.id/static-serve-metadata/logger"
+	
 )
 
 type Metadata struct {
@@ -55,7 +55,6 @@ func (g GroupSEO) GetDataByURL(url string) SEOData {
 		}
 	}
 
-	logger.System.DebugInfo("not found, giving the default", g.SeoDefaultContents)
 	return g.SeoDefaultContents
 }
 
@@ -92,7 +91,6 @@ func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []b
 		groupSEO := mapSEO[langCode]
 		seoData := groupSEO.GetDataByURL(wPath)
 
-		fmt.Println(seoData.URL)
 		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->", groupSEO.SeoTemplateContents.CollectMetadataString()+"\n"+seoData.CollectMetadataString(), 1)
 
 		c.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ac.WebConfig.MaxAge))
