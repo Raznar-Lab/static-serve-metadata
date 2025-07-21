@@ -39,7 +39,10 @@ type GroupSEO struct {
 }
 
 func (g GroupSEO) GetDataByURL(url string) SEOData {
-	url = strings.TrimSuffix(url, "/")
+
+	if url != "/" {
+		url = strings.TrimSuffix(url, "/")
+	}
 
 	for _, ctn := range g.SeoContents {
 		ctnURL := ctn.URL
@@ -89,6 +92,7 @@ func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []b
 		groupSEO := mapSEO[langCode]
 		seoData := groupSEO.GetDataByURL(wPath)
 
+		fmt.Println(seoData.URL)
 		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->", groupSEO.SeoTemplateContents.CollectMetadataString()+"\n"+seoData.CollectMetadataString(), 1)
 
 		c.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ac.WebConfig.MaxAge))
