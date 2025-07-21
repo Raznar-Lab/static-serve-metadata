@@ -27,6 +27,7 @@ type SEOData struct {
 	Default  bool       `json:"default"`
 	Template bool       `json:"template"`
 	Metadata []Metadata `json:"metadata"`
+	Prefix   string     `json:"prefix"`
 }
 
 type GroupSEO struct {
@@ -38,14 +39,20 @@ type GroupSEO struct {
 }
 
 func (g GroupSEO) GetDataByURL(url string) SEOData {
+	url = strings.TrimSuffix(url, "/")
+
 	for _, ctn := range g.SeoContents {
-		logger.System.DebugInfo(ctn.URL, url)
-		if ctn.URL == url {
+		ctnURL := ctn.URL
+		if ctn.Prefix != "" {
+			ctnURL = strings.TrimSuffix(strings.ReplaceAll(ctn.Prefix+"/"+ctnURL, "//", "/"), "/")
+		}
+
+		if ctnURL == url {
 			return ctn
 		}
 	}
 
-	logger.System.DebugInfo("not found, giving the default")
+	logger.System.DebugInfo("not found, giving the default", g.SeoDefaultContents)
 	return g.SeoDefaultContents
 }
 
@@ -74,16 +81,15 @@ func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []b
 		geoHeader := c.Get(ac.SeoConfig.GeoHeader)
 		wPath := c.Path()
 
-		langCode := getLangCode(ac, geoHeader)
+		langCode := getLangCode(ac, geoHeader, wPath)
 		if langCode == "" {
 			langCode = defaultLang
 		}
 
 		groupSEO := mapSEO[langCode]
-		logger.System.DebugInfo("lang ", langCode)
-		logger.System.DebugInfo("path: ", wPath)
 		seoData := groupSEO.GetDataByURL(wPath)
-		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->",  groupSEO.SeoTemplateContents.CollectMetadataString() + "\n" + seoData.CollectMetadataString(), 1)
+
+		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->", groupSEO.SeoTemplateContents.CollectMetadataString()+"\n"+seoData.CollectMetadataString(), 1)
 
 		c.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ac.WebConfig.MaxAge))
 		c.Set("Content-Type", "text/html")
@@ -91,9 +97,14 @@ func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []b
 	}
 }
 
-func getLangCode(ac *config.AppConfig, country string) (lang string) {
+func getLangCode(ac *config.AppConfig, country string, path string) (lang string) {
 	for k, v := range ac.SeoConfig.Languages {
 		if slices.Contains(v.Country, country) {
+			lang = k
+			return
+		}
+
+		if strings.HasPrefix(path, v.Prefix) {
 			lang = k
 			return
 		}
@@ -106,10 +117,11 @@ func getDefaultLang(ac *config.AppConfig) (defaultLang string) {
 	for k, v := range ac.SeoConfig.Languages {
 		if v.Default {
 			defaultLang = k
-			break
+			return
 		}
 	}
 
+	defaultLang = "default"
 	return
 }
 
@@ -169,19 +181,14 @@ func loadSeoContents(directory string) ([]SEOData, error) {
 		// Read file content
 		fileContent, err := os.ReadFile(filePath)
 		if err != nil {
-			logger.System.LogWarn("Failed to read file:", filePath, "Error:", err)
 			return nil // Continue with the next file
 		}
 
 		// Parse JSON
 		var seoDataList []SEOData
 		if err := json.Unmarshal(fileContent, &seoDataList); err != nil {
-			logger.System.LogWarn("Failed to parse JSON in file:", filePath, "Error:", err)
 			return nil // Continue with the next file
 		}
-
-		logger.System.DebugInfo("filename:", d.Name())
-		logger.System.DebugInfo("data:", seoDataList)
 
 		seoContents = append(seoContents, seoDataList...)
 		return nil

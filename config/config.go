@@ -18,10 +18,11 @@ type WebConfig struct {
 type LanguageConfig struct {
 	Country []string `yaml:"country"`
 	Default bool     `yaml:"default"`
+	Prefix  string   `yaml:"prefix"`
 }
 
 type SEOConfig struct {
-	GeoHeader string `yaml:"geo_header"`
+	GeoHeader string                    `yaml:"geo_header"`
 	Languages map[string]LanguageConfig `yaml:"languages"`
 	DataPath  string                    `yaml:"data_path"`
 }

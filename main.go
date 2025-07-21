@@ -6,8 +6,6 @@ import (
 	"raznar.id/static-serve-metadata/logger"
 )
 
-
-
 func main() {
 	flagsData := flags.New()
 

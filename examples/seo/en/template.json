@@ -1,47 +1,47 @@
 [
-    {
-        "template": true,
-        "metadata": [
-            {
-                "tag": "robots",
-                "content": "index, follow"
-            },
-            {
-                "tag": "googlebot",
-                "content": "index, follow"
-            },
-            {
-                "tag": "og:type",
-                "content": "website"
-            },
-            {
-                "tag": "og:site_name",
-                "content": "Raznar Hosting"
-            },
-            {
-                "tag": "og:url",
-                "content": "https://raznar.id"
-            },
-            {
-                "tag": "og:image",
-                "content": "https://raznar.id/icons/og.webp"
-            },
-            {
-                "tag": "twitter:card",
-                "content": "summary_large_image"
-            },
-            {
-                "tag": "twitter:creator",
-                "content": "Raznar Hosting"
-            },
-            {
-                "tag": "twitter:image",
-                "content": "https://raznar.id/icons/og.webp"
-            },
-            {
-                "tag": "keywords",
-                "content": "Premium game hosting, minecraft hosting, affordable minecraft hosting, fivem hosting, fivem game hosting, virtual private server, virtual dedicated server, web hosting, minecraft server, hosting service with full support and premium quality, Game hosting premium Indonesia, Game hosting Minecraft Indonesia, VPS game hosting Indonesia terjangkau, Game hosting untuk komunitas Indonesia, Game hosting terbaik di Indonesia, Server game hosting Indonesia terpercaya, Game hosting Minecraft modded terjangkau, Penyedia game hosting Indonesia, Game hosting untuk komunitas besar, Layanan game hosting Indonesia terbaik, Server game dengan performa tinggi, Game hosting dengan SSD NVMe Indonesia, Hosting server game multiplayer Indonesia, Game hosting komunitas Minecraft Indonesia, Server Minecraft modifikasi Indonesia, Game hosting dengan latensi rendah, Game hosting dengan perlindungan DDoS, Penyedia game hosting terpercaya Indonesia, Game hosting survival Minecraft Indonesia, Game hosting server virtual Indonesia, Game hosting dengan dukungan penuh Indonesia"
-            }
-        ]
-    }
+  {
+    "template": true,
+    "metadata": [
+      {
+        "tag": "robots",
+        "content": "index, follow"
+      },
+      {
+        "tag": "googlebot",
+        "content": "index, follow"
+      },
+      {
+        "tag": "og:type",
+        "content": "website"
+      },
+      {
+        "tag": "og:site_name",
+        "content": "Raznar"
+      },
+      {
+        "tag": "og:url",
+        "content": "https://raznar.id"
+      },
+      {
+        "tag": "og:image",
+        "content": "https://raznar.id/icons/og.webp"
+      },
+      {
+        "tag": "twitter:card",
+        "content": "summary_large_image"
+      },
+      {
+        "tag": "twitter:creator",
+        "content": "Raznar"
+      },
+      {
+        "tag": "twitter:image",
+        "content": "https://raznar.id/icons/og.webp"
+      },
+      {
+        "tag": "keywords",
+        "content": "Premium game hosting, Minecraft hosting, affordable Minecraft servers, FiveM hosting, FiveM game server hosting, virtual private servers (VPS), virtual dedicated servers, cloud servers Indonesia, reliable web hosting, high-performance Minecraft server, hosting with full support and premium quality, game hosting Indonesia, Minecraft hosting Indonesia, affordable VPS game hosting Indonesia, game hosting for Indonesian communities, best game hosting Indonesia, trusted game server provider Indonesia, modded Minecraft hosting Indonesia, Indonesia game hosting provider, game hosting for large communities, top game hosting services Indonesia, high-performance game servers, NVMe SSD game hosting Indonesia, multiplayer game server hosting Indonesia, Minecraft community hosting Indonesia, modified Minecraft servers Indonesia, low-latency game hosting, DDoS-protected game servers, trusted hosting provider Indonesia, survival Minecraft hosting Indonesia, virtual game server hosting Indonesia, full-support game hosting Indonesia, IT procurement services Indonesia, custom software development Indonesia, business application development, IT infrastructure solutions, dedicated game servers, cloud server provider Indonesia"
+      }
+    ]
+  }
 ]
