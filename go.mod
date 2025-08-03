@@ -3,8 +3,8 @@ module raznar.id/static-serve-metadata
 go 1.23.2
 
 require (
+	github.com/caarlos0/env/v10 v10.0.0
 	github.com/gofiber/fiber/v2 v2.52.6
-	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

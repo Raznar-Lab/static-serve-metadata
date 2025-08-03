@@ -16,7 +16,6 @@ WORKDIR /app
 # Copy app source and built Go binary
 COPY --from=0 /app/app-binary /usr/local/bin/app-binary
 COPY .github/docker/entrypoint.sh /entrypoint.sh
-COPY config.example.yml /app/config.example.yml
 RUN chmod +x /usr/local/bin/app-binary
 
 # Expose ports (e.g., for PHP server or reverse proxy)

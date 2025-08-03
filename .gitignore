@@ -4,3 +4,4 @@ seo/*
 build
 config.yml
 docker-compose.yml
+.env

@@ -1,93 +1,79 @@
 package config
 
 import (
-	"gopkg.in/yaml.v3"
+	"fmt"
 	"os"
+	"strings"
+
+	"github.com/caarlos0/env/v10"
 )
 
 type WebConfig struct {
-	MaxAge         uint64   `yaml:"max_age"`
-	IndexFile      string   `yaml:"index_file"`
-	DataPath       string   `yaml:"data_path"`
-	Port           string   `yaml:"port"`
-	Bind           string   `yaml:"bind"`
-	TrustedProxies []string `yaml:"trusted_proxies"`
-	ProxyHeader    string   `yaml:"proxy_header"`
+	MaxAge         uint64   `env:"WEB_MAX_AGE" envDefault:"3600"`
+	IndexFile      string   `env:"WEB_INDEX_FILE" envDefault:"index.html"`
+	DataPath       string   `env:"WEB_DATA_PATH" envDefault:"web"`
+	Port           string   `env:"WEB_PORT" envDefault:"8080"`
+	Bind           string   `env:"WEB_BIND" envDefault:"0.0.0.0"`
+	TrustedProxies []string `env:"WEB_TRUSTED_PROXIES" envSeparator:"," envDefault:""`
+	ProxyHeader    string   `env:"WEB_PROXY_HEADER" envDefault:"X-Forwarded-For"`
 }
 
 type LanguageConfig struct {
-	Country []string `yaml:"country"`
-	Default bool     `yaml:"default"`
-	Prefix  string   `yaml:"prefix"`
+	Country []string `json:"country"`
+	Default bool     `json:"default"`
+	Prefix  string   `json:"prefix"`
 }
 
 type SEOConfig struct {
-	GeoHeader string                    `yaml:"geo_header"`
-	Languages map[string]LanguageConfig `yaml:"languages"`
-	DataPath  string                    `yaml:"data_path"`
+	GeoHeader string                    `env:"SEO_GEO_HEADER"`
+	DataPath  string                    `env:"SEO_DATA_PATH"`
+	Languages map[string]LanguageConfig `env:"-"`
 }
 
 type AppConfig struct {
-	filepath  string
-	WebConfig WebConfig `yaml:"web"`
-	SeoConfig SEOConfig `yaml:"seo"`
+	WebConfig WebConfig
+	SeoConfig SEOConfig
 }
 
-var defaultAppConfig = &AppConfig{}
+func Load() (*AppConfig, error) {
+	cfg := &AppConfig{}
 
-func (appConfig *AppConfig) Load() (err error) {
-	if !appConfig.IsExists() {
-		defaultAppConfig.filepath = appConfig.filepath
-		appConfig = defaultAppConfig
-		err = appConfig.Save()
-		if err != nil {
-			return
+	if err := env.Parse(&cfg.WebConfig); err != nil {
+		return nil, err
+	}
+	if err := env.Parse(&cfg.SeoConfig); err != nil {
+		return nil, err
+	}
+
+	cfg.SeoConfig.Languages = map[string]LanguageConfig{}
+	langList := strings.Split(os.Getenv("SEO_LANGUAGES"), ",")
+	for _, lang := range langList {
+		langKey := strings.ToUpper(strings.TrimSpace(lang))
+		envKey := func(suffix string) string {
+			return os.Getenv(fmt.Sprintf("SEO_LANG_%s_%s", langKey, suffix))
+		}
+
+		cfg.SeoConfig.Languages[strings.ToLower(langKey)] = LanguageConfig{
+			Country: splitAndTrim(envKey("COUNTRY")),
+			Default: strings.ToLower(envKey("DEFAULT")) == "true",
+			Prefix:  envKey("PREFIX"),
+		}
+
+		fmt.Println(cfg.SeoConfig)
+	}
+
+	fmt.Println(cfg)
+	return cfg, nil
+}
+
+func splitAndTrim(s string) []string {
+	parts := strings.Split(s, ",")
+	var result []string
+	for _, p := range parts {
+		trimmed := strings.TrimSpace(p)
+		if trimmed != "" {
+			result = append(result, trimmed)
 		}
 	}
-
-	configData, err := os.ReadFile(appConfig.filepath)
-	if err != nil {
-		return
-	}
-
-	err = yaml.Unmarshal(configData, appConfig)
-	if err != nil {
-		return
-	}
-
-	err = appConfig.Parse()
-	return
-}
-
-// parse environment variables
-func (appConfig *AppConfig) Parse() (err error) {
-	// add parser logic
-
-	return
-}
-
-func (appConfig *AppConfig) IsExists() bool {
-	// generate default
-	_, err := os.Stat(appConfig.filepath)
-	return err == nil || os.IsExist(err)
-}
-
-func (appConfig *AppConfig) Save() (err error) {
-	// write default
-	configData, err := yaml.Marshal(defaultAppConfig)
-	os.WriteFile(appConfig.filepath, configData, 0644)
-
-	return
-}
-
-func New(filepath string, load bool) (appConfig *AppConfig, err error) {
-	appConfig = &AppConfig{
-		filepath: filepath,
-	}
-
-	if load {
-		err = appConfig.Load()
-	}
-
-	return
+	return result
 }

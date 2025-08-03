@@ -14,14 +14,11 @@ func main() {
 		logger.InitDebugValue()
 	}
 
-	appConfig, err := config.New(flagsData.ConfigPath, true)
+	appConfig, err := config.Load()
 	if err != nil {
 		logger.System.LogError(err)
 		return
 	}
-
-	logger.System.LogInfo(appConfig.IsExists())
-	logger.System.LogInfo(flagsData.Debug)
 
 	err = RunWeb(appConfig)
 	if err != nil {
