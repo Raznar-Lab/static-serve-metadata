@@ -65,7 +65,7 @@ func (m Metadata) ToHTML() string {
 	return fmt.Sprintf(`<meta name="%s" content="%s">`, m.Tag, m.Content)
 }
 
-func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []byte) fiber.Handler {
+func handleWeb(ac *config.Config, mapSEO map[string]GroupSEO, fileContent []byte) fiber.Handler {
 	defaultLang := getDefaultLang(ac)
 	templateHTML := string(fileContent)
 
@@ -95,7 +95,7 @@ func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []b
 	}
 }
 
-func getLangCode(ac *config.AppConfig, country, path string) string {
+func getLangCode(ac *config.Config, country, path string) string {
 	for lang, config := range ac.SeoConfig.Languages {
 		if contains(config.Country, country) || strings.HasPrefix(path, config.Prefix) {
 			return lang
@@ -113,7 +113,7 @@ func contains(slice []string, val string) bool {
 	return false
 }
 
-func getDefaultLang(ac *config.AppConfig) string {
+func getDefaultLang(ac *config.Config) string {
 	for lang, cfg := range ac.SeoConfig.Languages {
 		if cfg.Default {
 			return lang
@@ -122,7 +122,7 @@ func getDefaultLang(ac *config.AppConfig) string {
 	return "default"
 }
 
-func loadSEO(ac *config.AppConfig) (map[string]GroupSEO, error) {
+func loadSEO(ac *config.Config) (map[string]GroupSEO, error) {
 	result := make(map[string]GroupSEO)
 
 	for lang := range ac.SeoConfig.Languages {
@@ -170,29 +170,36 @@ func loadSeoContents(dir string) ([]SEOData, error) {
 	}
 	return contents, nil
 }
-
-func RunWeb(ac *config.AppConfig) error {
+func RunWeb(ac *config.Config) error {
 	webConf := ac.WebConfig
+
+	app := fiber.New(fiber.Config{
+		TrustedProxies:          webConf.TrustedProxies,
+		EnableTrustedProxyCheck: len(webConf.TrustedProxies) > 0,
+		ProxyHeader:             webConf.ProxyHeader,
+	})
+
+	app.Use(logger.New())
 
 	fileContent, err := os.ReadFile(path.Join(webConf.DataPath, webConf.IndexFile))
 	if err != nil {
 		return err
 	}
 
-	mapSEO, err := loadSEO(ac)
-	if err != nil {
-		return err
+	handler := func(c *fiber.Ctx) error {
+		return c.Type("html").Send(fileContent)
 	}
 
-	app := fiber.New(fiber.Config{
-		TrustedProxies:            webConf.TrustedProxies,
-		EnableTrustedProxyCheck:   len(webConf.TrustedProxies) > 0,
-		ProxyHeader:               webConf.ProxyHeader,
-	})
-
-	app.Use(logger.New())
-
-	handler := handleWeb(ac, mapSEO, fileContent)
+	if !ac.WebConfig.StaticOnly {
+		fmt.Println("Running with SEO")
+		mapSEO, err := loadSEO(ac)
+		if err != nil {
+			return err
+		}
+		handler = handleWeb(ac, mapSEO, fileContent)
+	} else {
+		fmt.Println("Running only static.")
+	}
 
 	app.Get("/", handler)
 	app.Static("/", webConf.DataPath)

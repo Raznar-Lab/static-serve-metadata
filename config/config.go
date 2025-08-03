@@ -9,6 +9,7 @@ import (
 )
 
 type WebConfig struct {
+	StaticOnly     bool     `env:"WEB_STATIC" envDefault:"false"`
 	MaxAge         uint64   `env:"WEB_MAX_AGE" envDefault:"3600"`
 	IndexFile      string   `env:"WEB_INDEX_FILE" envDefault:"index.html"`
 	DataPath       string   `env:"WEB_DATA_PATH" envDefault:"web"`
@@ -30,17 +31,18 @@ type SEOConfig struct {
 	Languages map[string]LanguageConfig `env:"-"`
 }
 
-type AppConfig struct {
+type Config struct {
 	WebConfig WebConfig
 	SeoConfig SEOConfig
 }
 
-func Load() (*AppConfig, error) {
-	cfg := &AppConfig{}
+func Load() (*Config, error) {
+	cfg := &Config{}
 
 	if err := env.Parse(&cfg.WebConfig); err != nil {
 		return nil, err
 	}
+
 	if err := env.Parse(&cfg.SeoConfig); err != nil {
 		return nil, err
 	}
