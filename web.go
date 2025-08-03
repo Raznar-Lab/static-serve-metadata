@@ -4,22 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/fs"
-	"maps"
 	"os"
 	"path"
 	"path/filepath"
-	"slices"
 	"strings"
 
 	"github.com/gofiber/fiber/v2"
-	logger_middleware "github.com/gofiber/fiber/v2/middleware/logger"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 	"raznar.id/static-serve-metadata/config"
-	
 )
 
 type Metadata struct {
 	Tag     string `json:"tag"`
-	Content string
+	Content string `json:"content"`
 }
 
 type SEOData struct {
@@ -27,210 +24,179 @@ type SEOData struct {
 	Default  bool       `json:"default"`
 	Template bool       `json:"template"`
 	Metadata []Metadata `json:"metadata"`
+	Title    string     `json:"title"`
 	Prefix   string     `json:"prefix"`
 }
 
 type GroupSEO struct {
-
-	// key: lang code
 	SeoContents         []SEOData
 	SeoDefaultContents  SEOData
 	SeoTemplateContents SEOData
 }
 
 func (g GroupSEO) GetDataByURL(url string) SEOData {
-
-	if url != "/" {
-		url = strings.TrimSuffix(url, "/")
-	}
-
-	for _, ctn := range g.SeoContents {
-		ctnURL := ctn.URL
-		if ctn.Prefix != "" {
-			ctnURL = strings.TrimSuffix(strings.ReplaceAll(ctn.Prefix+"/"+ctnURL, "//", "/"), "/")
-		}
-
-		if ctnURL == url {
-			return ctn
+	url = strings.TrimSuffix(url, "/")
+	for _, data := range g.SeoContents {
+		seoURL := strings.TrimSuffix(path.Join(data.Prefix, data.URL), "/")
+		if seoURL == url {
+			return data
 		}
 	}
-
 	return g.SeoDefaultContents
 }
 
-func (s SEOData) IsEmpty() bool {
-	return s.URL == ""
+func (g GroupSEO) GetTitle() string {
+	return g.SeoTemplateContents.Title
+}
+
+func (s SEOData) GetTitle() string {
+	return s.Title
 }
 
 func (s SEOData) CollectMetadataString() string {
-	metadataList := []string{}
-	for _, mtd := range s.Metadata {
-		metadataList = append(metadataList, mtd.ConvertToHTML())
+	var tags []string
+	for _, m := range s.Metadata {
+		tags = append(tags, m.ToHTML())
 	}
-
-	// indent 4 spaces.
-	return strings.Join(metadataList, "\n    ")
+	return strings.Join(tags, "\n    ")
 }
 
-func (s Metadata) ConvertToHTML() string {
-	return fmt.Sprintf("<meta name=\"%s\" content=\"%s\">", s.Tag, s.Content)
+func (m Metadata) ToHTML() string {
+	return fmt.Sprintf(`<meta name="%s" content="%s">`, m.Tag, m.Content)
 }
 
-func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []byte) func(c *fiber.Ctx) (err error) {
+func handleWeb(ac *config.AppConfig, mapSEO map[string]GroupSEO, fileContent []byte) fiber.Handler {
 	defaultLang := getDefaultLang(ac)
-	return func(c *fiber.Ctx) (err error) {
-		fileCtn := string(fileContent)
-		geoHeader := c.Get(ac.SeoConfig.GeoHeader)
-		wPath := c.Path()
+	templateHTML := string(fileContent)
 
-		langCode := getLangCode(ac, geoHeader, wPath)
-		if langCode == "" {
-			langCode = defaultLang
+	return func(c *fiber.Ctx) error {
+		lang := getLangCode(ac, c.Get(ac.SeoConfig.GeoHeader), c.Path())
+		if lang == "" {
+			lang = defaultLang
 		}
 
-		groupSEO := mapSEO[langCode]
-		seoData := groupSEO.GetDataByURL(wPath)
+		seoGroup := mapSEO[lang]
+		seo := seoGroup.GetDataByURL(c.Path())
 
-		fileCtn = strings.Replace(fileCtn, "<!-- seo header -->", groupSEO.SeoTemplateContents.CollectMetadataString()+"\n"+seoData.CollectMetadataString(), 1)
+		// Compose metadata
+		metadata := seoGroup.SeoTemplateContents.CollectMetadataString() + "\n" + seo.CollectMetadataString()
+
+		// Replace placeholders
+		content := strings.Replace(templateHTML, "<!-- seo header -->", metadata, 1)
+		title := seo.GetTitle()
+		if title == "" {
+			title = seoGroup.GetTitle()
+		}
+		content = strings.Replace(content, "<!-- title -->", title, 1)
 
 		c.Set("Cache-Control", fmt.Sprintf("public, max-age=%d", ac.WebConfig.MaxAge))
 		c.Set("Content-Type", "text/html")
-		return c.SendString(fileCtn)
+		return c.SendString(content)
 	}
 }
 
-func getLangCode(ac *config.AppConfig, country string, path string) (lang string) {
-	for k, v := range ac.SeoConfig.Languages {
-		if slices.Contains(v.Country, country) {
-			lang = k
-			return
-		}
-
-		if strings.HasPrefix(path, v.Prefix) {
-			lang = k
-			return
+func getLangCode(ac *config.AppConfig, country, path string) string {
+	for lang, config := range ac.SeoConfig.Languages {
+		if contains(config.Country, country) || strings.HasPrefix(path, config.Prefix) {
+			return lang
 		}
 	}
-
-	return
+	return ""
 }
 
-func getDefaultLang(ac *config.AppConfig) (defaultLang string) {
-	for k, v := range ac.SeoConfig.Languages {
-		if v.Default {
-			defaultLang = k
-			return
+func contains(slice []string, val string) bool {
+	for _, s := range slice {
+		if s == val {
+			return true
 		}
 	}
+	return false
+}
 
-	defaultLang = "default"
-	return
+func getDefaultLang(ac *config.AppConfig) string {
+	for lang, cfg := range ac.SeoConfig.Languages {
+		if cfg.Default {
+			return lang
+		}
+	}
+	return "default"
 }
 
 func loadSEO(ac *config.AppConfig) (map[string]GroupSEO, error) {
-	groupSeo := make(map[string]GroupSEO)
+	result := make(map[string]GroupSEO)
 
-	for lang := range maps.Keys(ac.SeoConfig.Languages) {
-		langDirectory := path.Join(ac.SeoConfig.DataPath, lang)
-
-		seoContents, err := loadSeoContents(langDirectory)
+	for lang := range ac.SeoConfig.Languages {
+		dir := path.Join(ac.SeoConfig.DataPath, lang)
+		data, err := loadSeoContents(dir)
 		if err != nil {
-			return groupSeo, err
+			return nil, fmt.Errorf("loading SEO data for %s: %w", lang, err)
 		}
 
-		groupSeo[lang] = GroupSEO{SeoContents: seoContents}
-	}
-
-	for lang, content := range groupSeo {
-		for _, seo := range content.SeoContents {
-			if seo.Default {
-				content.SeoDefaultContents = seo
-				break
+		group := GroupSEO{SeoContents: data}
+		for _, seo := range data {
+			if seo.Default && group.SeoDefaultContents.URL == "" {
+				group.SeoDefaultContents = seo
+			}
+			if seo.Template && group.SeoTemplateContents.URL == "" {
+				group.SeoTemplateContents = seo
 			}
 		}
-
-		groupSeo[lang] = content
+		result[lang] = group
 	}
 
-	for lang, content := range groupSeo {
-		for _, seo := range content.SeoContents {
-			if seo.Template {
-				content.SeoTemplateContents = seo
-				break
-			}
-		}
-
-		groupSeo[lang] = content
-	}
-
-	return groupSeo, nil
+	return result, nil
 }
 
-func loadSeoContents(directory string) ([]SEOData, error) {
-	var seoContents []SEOData
-
-	// Walk through all files and directories
-	err := filepath.WalkDir(directory, func(filePath string, d fs.DirEntry, err error) error {
-		if err != nil {
-			return fmt.Errorf("error accessing %s: %w", filePath, err)
+func loadSeoContents(dir string) ([]SEOData, error) {
+	var contents []SEOData
+	err := filepath.WalkDir(dir, func(filePath string, d fs.DirEntry, err error) error {
+		if err != nil || d.IsDir() {
+			return err
 		}
 
-		// Skip directories
-		if d.IsDir() {
+		raw, err := os.ReadFile(filePath)
+		if err != nil {
 			return nil
 		}
 
-		// Read file content
-		fileContent, err := os.ReadFile(filePath)
-		if err != nil {
-			return nil // Continue with the next file
+		var parsed []SEOData
+		if err := json.Unmarshal(raw, &parsed); err == nil {
+			contents = append(contents, parsed...)
 		}
-
-		// Parse JSON
-		var seoDataList []SEOData
-		if err := json.Unmarshal(fileContent, &seoDataList); err != nil {
-			return nil // Continue with the next file
-		}
-
-		seoContents = append(seoContents, seoDataList...)
 		return nil
 	})
-
 	if err != nil {
-		return nil, fmt.Errorf("error walking directory %s: %w", directory, err)
+		return nil, fmt.Errorf("error walking dir %s: %w", dir, err)
 	}
-
-	return seoContents, nil
+	return contents, nil
 }
 
-func RunWeb(ac *config.AppConfig) (err error) {
+func RunWeb(ac *config.AppConfig) error {
 	webConf := ac.WebConfig
-	fConf := fiber.Config{}
-	fConf.TrustedProxies = webConf.TrustedProxies
-
-	if len(fConf.TrustedProxies) > 0 {
-		fConf.EnableTrustedProxyCheck = true
-		fConf.ProxyHeader = webConf.ProxyHeader
-	}
 
 	fileContent, err := os.ReadFile(path.Join(webConf.DataPath, webConf.IndexFile))
 	if err != nil {
-		return
+		return err
 	}
 
-	mapSeo, err := loadSEO(ac)
+	mapSEO, err := loadSEO(ac)
 	if err != nil {
-		return
+		return err
 	}
 
-	webApp := fiber.New(fConf)
-	webApp.Use(logger_middleware.New())
+	app := fiber.New(fiber.Config{
+		TrustedProxies:            webConf.TrustedProxies,
+		EnableTrustedProxyCheck:   len(webConf.TrustedProxies) > 0,
+		ProxyHeader:               webConf.ProxyHeader,
+	})
 
-	webHandler := handleWeb(ac, mapSeo, fileContent)
-	webApp.Get("/", webHandler)
-	webApp.Static("/", webConf.DataPath)
-	webApp.Get("*", webHandler)
+	app.Use(logger.New())
 
-	err = webApp.Listen(fmt.Sprintf("%s:%s", webConf.Bind, webConf.Port))
-	return
+	handler := handleWeb(ac, mapSEO, fileContent)
+
+	app.Get("/", handler)
+	app.Static("/", webConf.DataPath)
+	app.Get("*", handler)
+
+	return app.Listen(fmt.Sprintf("%s:%s", webConf.Bind, webConf.Port))
 }
